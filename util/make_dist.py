@@ -136,9 +136,9 @@ def create_dist_directories(dist):
         shutil.rmtree(dist)
     mkdir(dist)
     mkdir(os.path.join(dist, 'src-input'))
-    #mkdir(os.path.join(dist, 'src-separate'))  # created by prepare_sources.py
-    #mkdir(os.path.join(dist, 'src'))
-    #mkdir(os.path.join(dist, 'src-noline'))
+    mkdir(os.path.join(dist, 'src-separate'))
+    mkdir(os.path.join(dist, 'src'))
+    mkdir(os.path.join(dist, 'src-noline'))
     mkdir(os.path.join(dist, 'tools'))
     mkdir(os.path.join(dist, 'config'))
     mkdir(os.path.join(dist, 'extras'))
@@ -772,23 +772,29 @@ def main():
 
     print('Config-and-prepare sources for default configuration')
 
-    cmd = [
-        sys.executable, os.path.join(dist, 'tools', 'prepare_sources.py'),
-        '--source-directory', os.path.join(dist, 'src-input'),
-        '--output-directory', dist,
-        '--config-metadata', os.path.join(dist, 'config', 'genconfig_metadata.tar.gz'),
-        '--git-commit', git_commit, '--git-describe', git_describe, '--git-branch', git_branch,
-        '--omit-removed-config-options', '--omit-unused-config-options',
-        '--emit-config-sanity-check', '--support-feature-options'
-    ]
-    if opts.rom_support:
-        cmd.append('--rom-support')
-    if opts.rom_auto_lightfunc:
-        cmd.append('--rom-auto-lightfunc')
-    for i in opts.user_builtin_metadata:
-        cmd.append('--user-builtin-metadata')
-        cmd.append(i)
-    exec_print_stdout(cmd)
+    def prep_default_sources(dirname, extraopts):
+        cmd = [
+            sys.executable, os.path.join(dist, 'tools', 'prepare_sources.py'),
+            '--source-directory', os.path.join(dist, 'src-input'),
+            '--output-directory', os.path.join(dist, dirname),
+            '--config-metadata', os.path.join(dist, 'config', 'genconfig_metadata.tar.gz'),
+            '--git-commit', git_commit, '--git-describe', git_describe, '--git-branch', git_branch,
+            '--omit-removed-config-options', '--omit-unused-config-options',
+            '--emit-config-sanity-check', '--support-feature-options'
+        ]
+        cmd += extraopts
+        if opts.rom_support:
+            cmd.append('--rom-support')
+        if opts.rom_auto_lightfunc:
+            cmd.append('--rom-auto-lightfunc')
+        for i in opts.user_builtin_metadata:
+            cmd.append('--user-builtin-metadata')
+            cmd.append(i)
+        exec_print_stdout(cmd)
+
+    prep_default_sources('src', [ '--line-directives' ])
+    prep_default_sources('src-noline', [])
+    prep_default_sources('src-separate', [ '--separate-sources' ])
 
     # Clean up remaining temp files.
 
